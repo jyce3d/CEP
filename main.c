@@ -341,6 +341,11 @@ void Update_Game() {
                 direction = CEP_DIR_RIGHT;
                 costume ++;
                 costume = costume % 3;
+                if (jmp_right_criteria()) {
+                    while (jmp_right_criteria())
+                        play_y +=2;
+                } else
+                    play_y -= play_y %8;    
             }
             if (a_ks[KS_LEFT].status == KS_KEYDOWN) {
                 if ( (play_x-=2)<=0)
@@ -348,6 +353,11 @@ void Update_Game() {
                 direction = CEP_DIR_LEFT;
                 costume ++;
                 costume = costume % 3;
+                if (jmp_left_criteria()) {
+                    while (jmp_left_criteria())
+                        play_y +=2;
+                } else
+                    play_y -= play_y %8;    
             }
             if (a_ks[KS_UP].status == KS_KEYDOWN) {
                 if (direction == CEP_DIR_LEFT)
@@ -358,10 +368,13 @@ void Update_Game() {
                     jmp_direction = CEP_JMP_UP;
                 else {
                     jmp_direction = CEP_JMP_DIR;
-                }
+                }                
                 if (lastup_down == 0)
                     lastup_down = SDL_GetTicks();
             } 
+            // check the ground.
+
+            
 
             spr_player_dest.x = play_x;
             spr_player_dest.y = play_y;
