@@ -27,6 +27,9 @@
 #define CEP_ENEMY_SPAWNED 1
 #define CEP_ENEMY_WAIT 0
 
+#define TRUE 1
+#define FALSE 0
+
 /* Initialization des composants */
 SDL_Window* pWindow = NULL;
 TTF_Font *pFont =NULL;
@@ -49,7 +52,11 @@ KeyStatus a_ks[4];
 #define KS_KEYDOWN 1
 #define KS_KEYUP 2
 
-#define CEP_MAX_ENEMY 2
+#define CEP_MAX_ENEMY 3
+
+#define CEP_TEXT_FILLED 1
+
+#define CEP_MAX_EXERC 8
 
 
 
@@ -78,8 +85,22 @@ char ga_scene[20][40]= {
     { 2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4}
 };
   
-char ga_exerc[3][255] = { {"45 : 9 = ?"}, {"27+32 = 5?"}, {"653-77=5?6"} };
-char ga_exerc_sol[3] = {5, 9, 7};
+char ga_exerc_1[8][255] = { {"45 : 9 = ?"}, {"27+32 = 5?"}, {"653-77=5?6"}, {"245+89=33?"}, {"570+158 = 7?8"}, {"547 + 238 = 7?5"}, {"857 - 424=43?"}, {"942 - 321 = 62?"} };
+char ga_exerc_sol_1[8] = {5, 9, 7, 4, 2, 8, 3, 1};
+
+
+char ga_exerc_2[8][255] = { {"4 X (3+9)  = 4?"}, {"(27+30)/3= ?9"}, {"7+3 X (2+8) =3?"},  {"(3 X 2-6+10) X 5=5? "}, 
+{"(6+9)X(8-5)X2 = ?6"}, {"(4 X 3+8-10)X7=?0"}, {"(5+6-3)X2+7)=?3"}, {"4+10X(9-8+2)=?4"} };
+char ga_exerc_sol_2[8] = {8, 1, 7, 0,6,
+0,2,3};
+
+char ga_exerc_3[8][255] = { {"6+8.(x+7) = -98 => x=-?0"}, {"3x + 15 = -2x => x=?"}, {"7 + 5x = 7x - 13 => x=1?"}, 
+{"x-8 = 10 => x=?8"},{"3x = 6 => x=?"},{"x+3=-8 => x=-1?"},{"3x-6(3-4x)=9x-2 => x=1?/30"},{"3(2-3x)-(4+5x)=0 => x=1/?"} };
+char ga_exerc_sol_3[8] = {2, 5, 0, 
+1, 2, 1, 6, 7};
+
+char ga_exerc[255];
+char ga_exerc_sol;
 
 int sel_exerc =0;
 int status = CEP_STATUS_INTRO;
@@ -87,7 +108,7 @@ int difficulty =0;
 int q=0;
 int sfc_loaded=0;
 int x_saut =0;
-int max_enemy = 2;
+int max_enemy = 3;
 
 Uint32 last_time;
 /* Initialization des éléments graphiques */
@@ -125,11 +146,11 @@ int vie = 3;
 SDL_Rect spr_enemy[3]= { {0,0,16,16 }, {16,0,16,16}, {32,0,16,16} };
 SDL_Rect spr_enemy_dest = {0, 0, 16,16};
 SDL_Rect spr_coin_dest = {0,0, 15,15};
-int enemy_x[CEP_MAX_ENEMY] = {16, 128};
-int enemy_y[CEP_MAX_ENEMY] = {84, 16};
-int enemy_sens_x[2]={0, 0};
-int enemy_status[2] = {1, 1};
-int enemy_waiting[2] = {0,0};
+int enemy_x[CEP_MAX_ENEMY] = {16, 128, 64};
+int enemy_y[CEP_MAX_ENEMY] = {84, 16, 16};
+int enemy_sens_x[CEP_MAX_ENEMY]={0, 0,0};
+int enemy_status[CEP_MAX_ENEMY] = {1, 1, 1};
+int enemy_waiting[CEP_MAX_ENEMY] = {0,0, 0};
 
 // Coins
 SDL_Rect spr_coins[10] = { {0,0,15,15} , {15,0,15,15}, {31,0,15,15}, {47,0,15,15}, {63,0,15,15},
@@ -150,12 +171,10 @@ void spawn_enemy(int idx) {
 void initialize_level() {
     play_x = 16;
     play_y = 136;
-    enemy_waiting[0] = 0;
-    enemy_waiting[1] = 0;
-
-    spawn_enemy(0); //enemy_x[0]= 16;
-                    //enemy_y[0] = 84;
-    spawn_enemy(1);
+    for (int i=0;i<max_enemy;i++) {
+        enemy_waiting[i] = 0;
+        spawn_enemy(i);
+    }
     direction &= 32767; // annule le saut au cas ou
 
 }
@@ -180,14 +199,11 @@ void display_enemy(int idx) {
 
 void deplace_enemy() {
     int pos_en_y = 0;
-    int pos_en_x = 0;
-
-   // printf("j=%d, i=%d, contenu=%d\n", pos_en_y, pos_en_x, ga_scene[pos_en_y][pos_en_x]);
+  
     for (int i=0;i<max_enemy;i++) {
         pos_en_y = (enemy_y[i] +16) /8;
-        pos_en_x = (enemy_x[i] +8) /8;
 
-        if (ga_scene[pos_en_y][pos_en_x]==0) {
+        if ((ga_scene[pos_en_y][(enemy_x[i]+16)/8]==0) && (ga_scene[pos_en_y][(enemy_x[i])/8]==0)  ) {
             enemy_y[i]++;
             enemy_sens_x[i]=0;
         } else {
@@ -219,7 +235,6 @@ int costume =0;
 int Trajectoire_Saut( int x_saut) {
     int y;
     float delta = 5.33f;
-   // printf("t_s:jmp_type=%d\n", jmp_type);
     if (jmp_type==CEP_JMP_LONG)
         delta = 2.0f *delta;
     if (x_saut>24)
@@ -278,7 +293,7 @@ int Create() {
     }
 }
 
-int Destroy() {
+void Destroy() {
     SDL_DestroyTexture(pEnemy);
     SDL_DestroyTexture(pPlayer);
     SDL_DestroyTexture(pScene);
@@ -287,7 +302,7 @@ int Destroy() {
     SDL_Quit();
 }
 
-void Display_Text(const char* pszTitle, int attrb, SDL_Color *pColor, int x, int y) {
+void Display_Text(const char* pszTitle, int attrb, SDL_Color *pColor, int x, int y, int filled) {
     SDL_Surface* pSurface = TTF_RenderText_Solid(pFont, pszTitle, *pColor );
     SDL_Texture* pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
     SDL_FreeSurface(pSurface);
@@ -306,6 +321,10 @@ void Display_Text(const char* pszTitle, int attrb, SDL_Color *pColor, int x, int
         default:
         break;
     }
+    if (filled == 1) {
+        SDL_SetRenderDrawColor( pRenderer, 0, 0, 0, 0 );
+        SDL_RenderFillRect( pRenderer, &dstrect );
+    }
     SDL_RenderCopy(pRenderer, pTexture, NULL, &dstrect );
     SDL_DestroyTexture(pTexture);
 }
@@ -313,10 +332,10 @@ void Update_Intro() {
         SDL_Color color = {255,0,0};
         SDL_SetRenderDrawColor(pRenderer, 0,0,0, 255);
         SDL_RenderClear(pRenderer);
-        Display_Text("Menu du jeu", CEP_TXT_CENTER, &color, 0,0);
-        Display_Text("1 Niveau facile", CEP_TXT_LEFT, &color, 0,32);
-        Display_Text("2 Niveau moyen", CEP_TXT_LEFT, &color, 0,48);
-        Display_Text("3 Niveau difficile", CEP_TXT_LEFT, &color, 0,64);
+        Display_Text("Menu du jeu", CEP_TXT_CENTER, &color, 0,0, 0);
+        Display_Text("1 Niveau facile", CEP_TXT_LEFT, &color, 0,32, 0);
+        Display_Text("2 Niveau moyen (PEMDAS)", CEP_TXT_LEFT, &color, 0,48, 0);
+        Display_Text("3 Niveau difficile (Equations)", CEP_TXT_LEFT, &color, 0,64, 0);
 
         SDL_RenderPresent(pRenderer);
 }
@@ -325,25 +344,44 @@ void Update_GameOver() {
         SDL_Color color = {255,0,0};
         SDL_SetRenderDrawColor(pRenderer, 0,0,0, 255);
         SDL_RenderClear(pRenderer);
-        Display_Text("Fin du Jeu", CEP_TXT_CENTER, &color, 0,96);
+        Display_Text("Fin du Jeu", CEP_TXT_CENTER, &color, 0,96,0);
         char s_params[255];
         sprintf(s_params,"Score :%d", score);
-        Display_Text(s_params, CEP_TXT_CENTER, &color, 0,104);
+        Display_Text(s_params, CEP_TXT_CENTER, &color, 0,104,0);
         if (score>high_score) {
             high_score = score;
-            Display_Text("Nouveau High Score", CEP_TXT_CENTER, &color, 0,112);
+            Display_Text("Nouveau High Score", CEP_TXT_CENTER, &color, 0,112,0);
         }
         vie =3;
         score =0;
         SDL_RenderPresent(pRenderer);
         SDL_Delay(2500);
         status = CEP_STATUS_INTRO;
+        sfc_loaded = 0;
 
+}
+void choose_level() {
+    sel_exerc = rand() % CEP_MAX_EXERC;
+    switch (difficulty) {
+        case 1: 
+            sprintf(ga_exerc, "%s", ga_exerc_1[sel_exerc]);
+            ga_exerc_sol = ga_exerc_sol_1[sel_exerc];
+        break;
+        case 2: 
+            sprintf(ga_exerc, "%s",ga_exerc_2[sel_exerc]);
+            ga_exerc_sol = ga_exerc_sol_2[sel_exerc];
+        break;
+        case 3: 
+            sprintf(ga_exerc, "%s", ga_exerc_3[sel_exerc]);
+            ga_exerc_sol = ga_exerc_sol_3[sel_exerc];
+        break;
+
+    }
 }
 void Update_NextLevel() {
         SDL_Delay(2500);
         initialize_level();
-        sel_exerc = rand() % 3;
+        choose_level();
         score = score +1000;
 
         status = CEP_STATUS_GAME;
@@ -355,11 +393,22 @@ void Process_Intro(SDL_Event* pEvent) {
     switch(pEvent->type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
+
             key = &(pEvent->key);
-            printf("key=%d\n",key->keysym.sym );
             if (key->keysym.sym==SDLK_1) {
                 difficulty = 1;
                 status = CEP_STATUS_GAME;
+                choose_level();
+
+            } else if (key->keysym.sym==SDLK_2) {
+                difficulty = 2;
+                status = CEP_STATUS_GAME;
+                choose_level();
+
+            } else if (key->keysym.sym==SDLK_3) {
+                difficulty = 3;
+                status = CEP_STATUS_GAME;
+                choose_level();
             }
 
         break;
@@ -367,7 +416,7 @@ void Process_Intro(SDL_Event* pEvent) {
 }
 
 void Init_Scene() {
-    SDL_Surface* scene_sfc = SDL_CreateRGBSurface(0,320,200,32,0,0,0,0);
+    SDL_Surface* scene_sfc = SDL_CreateRGBSurface(0,CEP_WND_WIDTH,CEP_WND_HEIGHT,32,0,0,0,0);
     SDL_Rect dest_rect;
     dest_rect.w=8;
     dest_rect.h=8;
@@ -409,7 +458,7 @@ int jmp_criteria(int idx_x, int idx_y, int verbose ) {
     if (verbose==1) {
         sprintf(s_params, "I");
         printf("y = %d et idx_y=%d et ga_scene=%d, ga_r=%d, ga_c=%d\n", play_y, idx_y, ga_scene[ga_r][ga_c], ga_r, ga_c);
-        Display_Text(s_params, CEP_TXT_LEFT , &color, ga_c*8,ga_r*8);
+        Display_Text(s_params, CEP_TXT_LEFT , &color, ga_c*8,ga_r*8, 0);
     }
     return (ga_scene[ga_r][ga_c] ==0);
 }
@@ -420,8 +469,8 @@ void Move_Monkey() {
                     if ( (play_x+=2)>=304 )
                         play_x = 304;
                   direction = CEP_DIR_RIGHT;
-                    costume ++;
-                    costume = costume % 3;
+                  costume ++;
+                  costume = costume % 3;
                 }
                 if (a_ks[KS_LEFT].status == KS_KEYDOWN) {
                     if ( (play_x-=2)<=0)
@@ -451,59 +500,42 @@ void Move_Monkey() {
 }
 
 int is_collided() {
-    int dir =-1;
-    dir = (direction & 32767); // reset le bit 8
+    int x1 = play_x +8;
+    int y1 = play_y +8;
+    int x2 = 0;
+    int y2 = 0;
 
     for (int i=0; i<max_enemy;i++ ) {
-        if ((dir == CEP_DIR_RIGHT  )) { 
-            if ( (play_x +10 >= enemy_x[i]) && (play_x +10  <=enemy_x[i] +10 )     ) {
-                if ((play_y +12 >= enemy_y[i]) && (play_y<=enemy_y[i]))
-                    return 1;
-                else {
-                    if (((direction & 32768) !=0) && (play_y +20 >= enemy_y[i] || play_y +16 >= enemy_y[i] || play_y +14 >= enemy_y[i] ) )
-                        status_score = 1;
-                }            
-            }
-        } else if (dir == CEP_DIR_LEFT) {
-            if ( (play_x +2 >= enemy_x[i]) && (play_x +2 <=enemy_x[i] +10 )      ) {
-                if ((play_y +12 >= enemy_y[i]) && (play_y<=enemy_y[i]))
-                    return 1;
-                else {
-                    if (((direction & 32768) !=0) && (play_y +20 >= enemy_y[i] || play_y +16 >= enemy_y[i] || play_y +14 >= enemy_y[i] ) )
-                        status_score = 1;
-                }
-            }
-        }
+ 
+        x2 = enemy_x[i]+8 ;
+        y2 = enemy_y[i] + 8;
+        if (  abs(x1-x2) <=8 && abs(y1-y2) <=8 )
+            return 1;
+        if (  abs(x1-x2) <=8 && abs(y1-y2) <= 16  ) 
+        status_score = 1;
     }
     // Collision with coins
     if ((direction & 32768) ==0)
-        return 0; 
-    for (int i=0; i<10; i++) {
-        if ((dir == CEP_DIR_RIGHT  )) { 
-            if ( (play_x +10 >= coins_x[i]) && (play_x +10  <=coins_x[i] +10 ) && (play_y +8 >= coins_y[i]) && (play_y<=coins_y[i])     ) {
-                if (i == ga_exerc_sol[sel_exerc]) 
-                    status= CEP_STATUS_NEXT;
-                else
-                    return 1;
-            }
-        }
-        if ((dir == CEP_DIR_RIGHT  )) { 
-            if ( (play_x +2 >= coins_x[i]) && (play_x +2  <=coins_x[i] +10 ) && (play_y +8 >= coins_y[i]) && (play_y<=coins_y[i])     ) {
-                if (i == ga_exerc_sol[sel_exerc]) 
-                    status= CEP_STATUS_NEXT;
-                else
-                    return 1;
-            }
-        }
+        return 0;
 
+    for (int i=0; i<10; i++) {
+        x2 = coins_x[i]+8 ;
+        y2 = coins_y[i] + 8;
+        if (  abs(x1-x2) <=8 && abs(y1-y2) <=8 ) {
+            if (i == ga_exerc_sol) 
+                status= CEP_STATUS_NEXT;
+            else
+                return 1;
+        }
+        
     }
     return 0;
 }
 void Update_Game() {
  
     Uint32 cur_time = SDL_GetTicks() - last_time;
-    if (cur_time<=30) {
-        SDL_Delay(30 - cur_time);
+    if (cur_time<=40) {
+        SDL_Delay(40 - cur_time);
     } else {
    
         // Affichage des paramètres:
@@ -517,7 +549,7 @@ void Update_Game() {
         }
 
         // Create Screen
-        SDL_Rect rct_scene = {0,0,320,200};
+        SDL_Rect rct_scene = {0,0,CEP_WND_WIDTH,CEP_WND_HEIGHT};
         SDL_RenderCopy(pRenderer, pScene, &rct_scene, &rct_scene );
  // Display coins
         for (int i=0;i<10;i++) {
@@ -536,18 +568,19 @@ void Update_Game() {
             // controle chute hors saut
                 jmp_type = -1;
                 if (direction == CEP_DIR_RIGHT) {
-                    if (jmp_criteria(6,16,0)) {
+                    // on check devant et derrière => si roche derriere on ne tombe pas quelque soit la direction dans laquelle on va
+                    if (jmp_criteria(16,16,0) && jmp_criteria(0,16,0) ) {
                         jmp_type = 0;
                         play_y += Trajectoire_Saut(32);
 
                     }
                     else {
                         play_y -= play_y %8;
-                        Move_Monkey();
+                        Move_Monkey(); // déplacement du singe et mise en place des costumes (voir)
                     }
 
                 } else if (direction == CEP_DIR_LEFT) {
-                    if (jmp_criteria(8,16,0)) {
+                    if (jmp_criteria(0,16,0) && jmp_criteria(16,16,0)) {
                         play_y += Trajectoire_Saut(32);
                         jmp_type = 0;
                     }
@@ -557,6 +590,7 @@ void Update_Game() {
                     }
 
                 }
+                // Check une touche up appuyée pour initier le saut.
                 if (a_ks[KS_UP].status == KS_KEYUP) {
                     if (lastup_down>0) {
                         int diff = (SDL_GetTicks() - lastup_down);
@@ -604,7 +638,7 @@ void Update_Game() {
                         direction &=32767;  // annule l'état saut
                         if (status_score ==1) score=score +200;
                         status_score =0;
-                   } else if (x_saut<=24 && !jmp_criteria(16,0,0)) {
+                   } else if (x_saut<=24 && !jmp_criteria(16,0,0)) { 
                     // Si le saut était long et que l'on tombe sur une plateforme, on racourcit le saut
                       jmp_type = 0;
                       x_saut = 26; // on force la descente et on force un saut court pour éviter qu'il s'enfonce la tête dans le mur.
@@ -628,18 +662,18 @@ void Update_Game() {
     SDL_Color color = {255,255,255};
     char s_params[255];
     sprintf(s_params, "Score=%d        HIGH Score= %d", score, high_score);
-    Display_Text(s_params, CEP_TXT_LEFT , &color, 0,164);
+    Display_Text(s_params, CEP_TXT_LEFT , &color, 0,164,0);
     sprintf(s_params, "Vie(s)=%d", vie);
-    Display_Text(s_params, CEP_TXT_LEFT , &color, 0,180);
-    sprintf(s_params, ga_exerc[sel_exerc]);
-    Display_Text(s_params, CEP_TXT_LEFT , &color, 128,180);
+    Display_Text(s_params, CEP_TXT_LEFT , &color, 0,180, 0);
+    sprintf(s_params, "%s", ga_exerc);
+    Display_Text(s_params, CEP_TXT_CENTER , &color,0, 0, CEP_TEXT_FILLED);
     
 
     SDL_RenderPresent(pRenderer);
 }
 void update_death() {
         // Create Screen
-    SDL_Rect rct_scene = {0,0,320,200};
+    SDL_Rect rct_scene = {0,0,CEP_WND_WIDTH,CEP_WND_HEIGHT};
     SDL_RenderCopy(pRenderer, pScene, &rct_scene, &rct_scene );
 
     for (int i=0;i<max_enemy;i++)
@@ -678,12 +712,11 @@ void update_status() {
             }
 }
 
-void main() {
+int main() {
     // Intialize le générateur congruentiel par rapport à l'horloge 
     time_t t;
     t = time(NULL);
     srand(t);
-    sel_exerc = rand() % 3;
 
     SDL_Event event;
     if (Create()==1) {
