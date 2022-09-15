@@ -4,7 +4,7 @@
 This is a platform game in which a monkey has to find the right answer to a simple math problem (from primary school)  while jumping on platform and avoiding lethal crabs...
 
 The state:
-- game is usable
+
 IMPROVEMENTS:
 - portage Windows (en cours)
 - Créer de nouveaux graphismes pour une résolution plus large.
