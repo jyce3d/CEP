@@ -712,7 +712,8 @@ void update_status() {
             }
 }
 
-int main() {
+
+int main(int argc, char *argv[]) {
     // Intialize le générateur congruentiel par rapport à l'horloge 
     time_t t;
     t = time(NULL);
@@ -769,4 +770,5 @@ int main() {
 
     Destroy();
     exit(0);
+    return 0;
 }
