@@ -15,7 +15,7 @@
 #define CEP_TXT_LEFT 2
 
 #define CEP_WND_WIDTH 320
-#define CEP_WND_HEIGHT 200
+#define CEP_WND_HEIGHT 240
 
 #define CEP_DIR_RIGHT 0
 #define CEP_DIR_LEFT 1
@@ -115,6 +115,7 @@ Uint32 last_time;
 
 SDL_Surface* level_sfc = NULL;
 SDL_Texture* pScene = NULL;
+SDL_Texture* pFlipTexture = NULL;
 
 SDL_Texture* pPlayer = NULL;
 SDL_Texture* pEnemy = NULL;
@@ -252,8 +253,8 @@ int Create() {
 
     pWindow = SDL_CreateWindow("CEP - Certificat D'étude Primate", 
                                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                CEP_WND_WIDTH, CEP_WND_HEIGHT,SDL_WINDOW_SHOWN );
-   // SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
+                                CEP_WND_WIDTH, CEP_WND_HEIGHT,SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI );
+    SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
                             
     if (pWindow) {
             if (!TTF_Init()) {
@@ -261,7 +262,7 @@ int Create() {
                     printf("Erreur lors du chargement de la font %s \n", SDL_GetError());
                     return -1;
                 } else {
-                    if ((pRenderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED) )==NULL) {
+                    if ((pRenderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) )==NULL) {
                         printf("Erreur lors de la création du Renderer %s \n", SDL_GetError());
                         return -1;
                     } else {
@@ -278,6 +279,8 @@ int Create() {
                         SDL_SetColorKey(coins_sfc, SDL_TRUE, SDL_MapRGB(coins_sfc->format, 0xFF, 0xFF, 0xFF));
                         pCoins = SDL_CreateTextureFromSurface(pRenderer, coins_sfc);
                         SDL_FreeSurface(coins_sfc);
+                        //SDL_Surface* flip_sfc = SDL_CreateRGBSurface()
+                        //pFlipTexture = SDL_CreateTextureFromSurface(flip_sfc);
 
                         return 1;
                     }
@@ -297,6 +300,8 @@ void Destroy() {
     SDL_DestroyTexture(pEnemy);
     SDL_DestroyTexture(pPlayer);
     SDL_DestroyTexture(pScene);
+    SDL_DestroyTexture(pCoins);
+    SDL_DestroyTexture(pFlipTexture);
     SDL_FreeSurface(level_sfc);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();
@@ -337,7 +342,7 @@ void Update_Intro() {
         Display_Text("2 Niveau moyen (PEMDAS)", CEP_TXT_LEFT, &color, 0,48, 0);
         Display_Text("3 Niveau difficile (Equations)", CEP_TXT_LEFT, &color, 0,64, 0);
 
-        SDL_RenderPresent(pRenderer);
+      //  SDL_RenderPresent(pRenderer);
 }
 
 void Update_GameOver() {
@@ -443,6 +448,7 @@ void Init_Scene() {
             }
         }
     }
+    if (pScene !=NULL) SDL_DestroyTexture(pScene);
     pScene = SDL_CreateTextureFromSurface(pRenderer, scene_sfc);
     SDL_FreeSurface(scene_sfc);
 
@@ -533,22 +539,19 @@ int is_collided() {
 }
 void Update_Game() {
  
-    Uint32 cur_time = SDL_GetTicks() - last_time;
-    if (cur_time<=40) {
-        SDL_Delay(40 - cur_time);
-    } else {
    
         // Affichage des paramètres:
 
-
+        SDL_Delay(30);
         last_time = SDL_GetTicks();
         if (sfc_loaded==0) {
-            Init_Scene();
+            Init_Scene(); // si on change de niveau et que la scene doit être recréé via une nouvelle surface.
             initialize_level(); // sprites coordinates;
             sfc_loaded=1;
         }
 
         // Create Screen
+
         SDL_Rect rct_scene = {0,0,CEP_WND_WIDTH,CEP_WND_HEIGHT};
         SDL_RenderCopy(pRenderer, pScene, &rct_scene, &rct_scene );
  // Display coins
@@ -657,7 +660,7 @@ void Update_Game() {
 
             deplace_enemy();
         }
-    }
+    
     SDL_SetRenderDrawColor(pRenderer, 0,0,0, 255);
     SDL_Color color = {255,255,255};
     char s_params[255];
@@ -669,6 +672,10 @@ void Update_Game() {
     Display_Text(s_params, CEP_TXT_CENTER , &color,0, 0, CEP_TEXT_FILLED);
     
 
+    //SDL_RenderPresent(pRenderer);
+}
+void renderer_present() {
+    //SDL_SetRendererTarget()
     SDL_RenderPresent(pRenderer);
 }
 void update_death() {
@@ -693,6 +700,9 @@ void update_death() {
 
 }
 void update_status() {
+            SDL_SetRenderDrawColor(pRenderer, 0,0,0, 255);
+        SDL_RenderClear(pRenderer);
+
             switch(status) {
                 case CEP_STATUS_INTRO:
                     Update_Intro();
@@ -710,6 +720,7 @@ void update_status() {
                     Update_NextLevel();
                 break;
             }
+            renderer_present();
 }
 
 
