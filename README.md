@@ -8,17 +8,17 @@ The state:
 
 IMPROVEMENTS:
 - portage Windows (DONE)
-- fall from a platform did not display an animation (not done)
-- Créer de nouveaux graphismes pour une résolution plus large.
-- ajuster le nombre de crabe en fonction de la difficulté
-- créer de nouveaux niveaux (level design)
-- ajouter de nouvelles mosaiques d'éléments de décors (comme des fruits, arbre,...) 
-- Permettre le lancé des fruits sur les crabes afin de les éliminer et de gagner des points (comme dans l'original)
-- Système de panneaux mobile pour cacher les réponses (memory)
-- Ajouter la partie sons et musique
-- Ajouter un système de scrolling multidirectionnel pour faire des niveaux plus grands.
+- fall from a platform did not display an animation (Non)
+- Créer de nouveaux graphismes pour une résolution plus large (Non)
+- ajuster le nombre de crabe en fonction de la difficulté (OK)
+- créer de nouveaux niveaux (Done-Ongoing)
+- ajouter de nouvelles mosaiques d'éléments de décors (comme des fruits, arbre,...) : DONE 
+- Permettre le lancé des fruits sur les crabes afin de les éliminer et de gagner des points (comme dans l'original) : DONE
+- Système de panneaux mobile pour cacher les réponses (memory) : (Non)
+- Ajouter la partie sons et musique (Pending)
+- Ajouter un système de scrolling multidirectionnel pour faire des niveaux plus grands (Non).
 
 
 BUGS:
-blinking screen (partially)
+blinking screen (partially) : Fix
 
