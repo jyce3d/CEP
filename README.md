@@ -39,9 +39,9 @@ IMPROVEMENTS:<br>
 - Système de panneaux mobile pour cacher les réponses (memory) : (Non)<br>
 - Ajouter la partie sons et musique (Pending)<br>
 - Ajouter un système de scrolling multidirectionnel pour faire des niveaux plus grands (Non).<br>
-
-
-BUGS List:
-blinking screen (partially) : Fixed
+<br>
+<br>
+BUGS List:<br>
+blinking screen (partially) : Fixed<br>
 
 
