@@ -12,6 +12,8 @@ Right key -> Move to the right<br>
 Up key -> jump<br>
 Long hit on jump key -> High jump to reach upper platform<br>
 Space -> Throw a fruct once collected that allow to kill the crab.<br>
+Escape key -> quit the game<br>
+
 <br>
 (Il s'agit d'un jeu e plateforme dans lequel un petit singe doit trouver la bonne réponse à un simple problème de calcul (niveau primaire ou plus) en sautant de plateformes en plateformes tout en évitant les dangereux crabes.<br>
 Le jeu se compose de différent niveaux allant des îles au Gnouf, le but est de compléter la bonne réponse avec la bonne pièce afin de quitter le niveau. Si vous vous trompez de réponse (en sélectionnant la mauvaise pièce) ou si vous êtes touché par un des crabes, vous perdez une vie (au total il y en a 3).<br>
@@ -23,6 +25,8 @@ touche de droite -> aller à droite<br>
 touche du haut -> sauter<br>
 appui long sur la touche du haut -> long saut pour atteindre les plateformes supérieures<br>
 touche espace -> lancé un fruit si vous l'avez récupéré.)<br>
+touche escape -> quitter le jeu<br>
+
 <br>
 <br>
 The state:<br>
